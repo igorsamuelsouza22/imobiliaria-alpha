@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import path from 'path';
 import { prisma } from './prisma';
 import { startErpSync } from './erp-sync';
 
@@ -66,6 +67,18 @@ app.get('/site-settings', async (_req, res) => {
     res.status(500).json({ error: 'Erro ao buscar configurações do site.' });
   }
 });
+
+// Production serves the built frontend (dist/, from `npm run build`) from
+// this same process/container — Dokploy deploys one Dockerfile, so there's
+// no separate static host. Dev keeps using the Vite dev server on :5173
+// instead, so this only runs when actually deployed as a built image.
+if (process.env.NODE_ENV === 'production') {
+  const distPath = path.resolve(process.cwd(), 'dist');
+  app.use(express.static(distPath));
+  app.get('*', (_req, res) => {
+    res.sendFile(path.join(distPath, 'index.html'));
+  });
+}
 
 app.listen(PORT, () => {
   console.log(`🚀 Backend rodando na porta ${PORT}`);
