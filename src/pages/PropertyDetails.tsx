@@ -74,28 +74,56 @@ export function PropertyDetails() {
   const [chatOpen, setChatOpen] = useState(false);
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
-  // Once the widget is loaded/identified (see handleScheduleVisit), relocate
-  // its DOM node from Chatwoot's own floating/fixed-position holder into our
-  // card — same live iframe/session, just rendered inline instead of as a
-  // corner popup, per how the "Consultor Responsável" card is meant to work.
+  // Once the widget is loaded/identified (see handleScheduleVisit), visually
+  // pin it over our card instead of using Chatwoot's default floating
+  // corner position. Deliberately does NOT move the iframe's DOM node
+  // (tried that first — appendChild-ing it elsewhere made the browser
+  // reload the iframe's content, which then hit Chatwoot's X-Frame-Options
+  // and rendered a blocked-embed icon). Only inline CSS (position/size) is
+  // touched, so the live/identified iframe never reloads. Re-synced on
+  // scroll/resize since the card is `position: sticky`.
   useEffect(() => {
-    if (!chatOpen || !chatContainerRef.current) return;
-    const holder = document.getElementById('cw-widget-holder');
-    if (!holder) return;
-    holder.style.position = 'static';
-    holder.style.inset = 'auto';
-    holder.style.width = '100%';
-    holder.style.height = '100%';
-    holder.style.zIndex = 'auto';
-    const iframe = holder.querySelector('iframe') as HTMLIFrameElement | null;
-    if (iframe) {
-      iframe.style.width = '100%';
-      iframe.style.height = '100%';
-      iframe.style.position = 'static';
-      iframe.style.border = '0';
-      iframe.style.visibility = 'visible';
+    if (!chatOpen) return;
+    const holderEl = document.getElementById('cw-widget-holder');
+    const iframeEl = holderEl?.querySelector('iframe') as HTMLIFrameElement | null;
+    if (!holderEl || !iframeEl) return;
+    const holder: HTMLElement = holderEl;
+    const iframe: HTMLIFrameElement = iframeEl;
+
+    iframe.style.width = '100%';
+    iframe.style.height = '100%';
+    iframe.style.border = '0';
+    iframe.style.visibility = 'visible';
+
+    function syncPosition() {
+      const rect = chatContainerRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      holder.style.position = 'fixed';
+      holder.style.inset = 'auto';
+      holder.style.top = `${rect.top}px`;
+      holder.style.left = `${rect.left}px`;
+      holder.style.width = `${rect.width}px`;
+      holder.style.height = `${rect.height}px`;
+      holder.style.zIndex = '30';
     }
-    chatContainerRef.current.appendChild(holder);
+
+    syncPosition();
+    window.addEventListener('scroll', syncPosition);
+    window.addEventListener('resize', syncPosition);
+
+    return () => {
+      window.removeEventListener('scroll', syncPosition);
+      window.removeEventListener('resize', syncPosition);
+      // Restore Chatwoot's own default floating position instead of
+      // leaving it pinned to coordinates that no longer mean anything.
+      holder.style.position = '';
+      holder.style.inset = '';
+      holder.style.top = '';
+      holder.style.left = '';
+      holder.style.width = '';
+      holder.style.height = '';
+      holder.style.zIndex = '';
+    };
   }, [chatOpen]);
 
   async function handleScheduleVisit() {
