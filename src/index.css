@@ -116,5 +116,14 @@ html, body {
 }
 
 .animate-fadeInPage {
-  animation: fadeInPage 0.4s ease-out forwards;
+  /* No `forwards`: with it, the 100% keyframe's transform: translateY(0)
+     stays applied forever after the animation ends (translateY(0) is not
+     the same as `transform: none` to the CSS engine) — an ancestor with
+     any non-none transform becomes the containing block for `position:
+     fixed` descendants, which broke the photo lightbox (and any other
+     fixed-position element) on every page after its transition-in
+     finished. Dropping `forwards` reverts to the element's normal
+     (transform: none) style once the animation completes — visually
+     identical since nothing else sets opacity/transform on this class. */
+  animation: fadeInPage 0.4s ease-out;
 }

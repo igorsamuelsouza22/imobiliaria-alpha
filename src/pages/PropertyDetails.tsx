@@ -189,9 +189,8 @@ export function PropertyDetails() {
 
   return (
     <div className="bg-white min-h-screen pb-24">
-      <div className="h-[60vh] relative bg-gray-900 overflow-hidden">
-        <img src={property.imageUrl} alt="" aria-hidden="true" className="absolute inset-0 w-full h-full object-cover blur-2xl scale-110 opacity-40" />
-        <img src={property.imageUrl} alt={property.title} className="relative w-full h-full object-contain opacity-90" />
+      <div className="h-[60vh] relative bg-gray-900">
+        <img src={property.imageUrl} alt={property.title} className="w-full h-full object-cover opacity-90" />
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent px-8 pt-16 pb-24">
           <div className="max-w-7xl mx-auto">
             <div className="flex flex-wrap items-center gap-2 mb-4 animate-fade-in-up">
