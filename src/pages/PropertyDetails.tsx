@@ -2,7 +2,6 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ScrollReveal } from '../components/ScrollReveal';
 import { getPropertyById } from '../services/propertyService';
-import { getImgproxyUrl, getImgproxyUrlSync } from '../lib/imgproxy';
 import type { Property } from '../types/property';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -63,8 +62,6 @@ export function PropertyDetails() {
   const [activeGalleryImageIndex, setActiveGalleryImageIndex] = useState(0);
   const [selectedRoomCategory, setSelectedRoomCategory] = useState('Todos');
   const [showStickyHeader, setShowStickyHeader] = useState(false);
-  const [heroImgUrl, setHeroImgUrl] = useState('');
-  const [fullscreenUrl, setFullscreenUrl] = useState('');
 
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
@@ -85,19 +82,6 @@ export function PropertyDetails() {
   const displayFilteredImages = selectedRoomCategory === 'Todos'
     ? filteredImages
     : filteredImages.filter(img => img.room === selectedRoomCategory);
-
-  useEffect(() => {
-    if (!property) return;
-    getImgproxyUrl(property.imageUrl, { width: 1400, height: 800, quality: 85, format: 'webp' })
-      .then(setHeroImgUrl);
-  }, [property?.imageUrl]);
-
-  useEffect(() => {
-    if (selectedImageIndex !== null && displayFilteredImages[selectedImageIndex]) {
-      getImgproxyUrl(displayFilteredImages[selectedImageIndex].url, { width: 1920, height: 1080, quality: 90, format: 'webp' })
-        .then(setFullscreenUrl);
-    }
-  }, [selectedImageIndex]);
 
   const openGallery = (index: number) => {
     setSelectedImageIndex(index);
@@ -206,7 +190,7 @@ export function PropertyDetails() {
   return (
     <div className="bg-white min-h-screen pb-24">
       <div className="h-[60vh] relative bg-gray-900">
-        <img src={heroImgUrl || property.imageUrl} alt={property.title} className="w-full h-full object-cover opacity-90" />
+        <img src={property.imageUrl} alt={property.title} className="w-full h-full object-cover opacity-90" />
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent px-8 pt-16 pb-24">
           <div className="max-w-7xl mx-auto">
             <div className="flex flex-wrap items-center gap-2 mb-4 animate-fade-in-up">
@@ -238,7 +222,7 @@ export function PropertyDetails() {
         <div className="fixed top-20 left-0 right-0 bg-white/90 backdrop-blur-lg z-40 border-b border-gray-100/60 animate-slide-in-down shadow-sm">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center justify-between gap-4">
             <div className="flex items-center gap-3 min-w-0 flex-1">
-              <img src={getImgproxyUrlSync(property.imageUrl)} alt={property.title} className="w-9 h-9 rounded-md object-cover hidden sm:block flex-shrink-0 ring-1 ring-gray-100" />
+              <img src={property.imageUrl} alt={property.title} className="w-9 h-9 rounded-md object-cover hidden sm:block flex-shrink-0 ring-1 ring-gray-100" />
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5 mb-0.5">
                   <span className={`px-2 py-0.5 rounded text-[9px] font-semibold uppercase tracking-widest shrink-0 ${property.operation === 'Aluguel' ? 'bg-emerald-50 text-emerald-600' : property.operation === 'Venda e Aluguel' ? 'bg-gray-900 text-white' : 'bg-[#c0a062]/10 text-[#c0a062]'}`}>
@@ -533,7 +517,7 @@ export function PropertyDetails() {
           </button>
 
           <div className="w-full h-full flex items-center justify-center p-4 md:p-8" onClick={(e) => e.stopPropagation()}>
-            <img src={fullscreenUrl || displayFilteredImages[selectedImageIndex].url} alt={property.title} className="w-full h-full object-contain animate-scale-in select-none" />
+            <img src={displayFilteredImages[selectedImageIndex].url} alt={property.title} className="w-full h-full object-contain animate-scale-in select-none" />
           </div>
 
           <div className="absolute bottom-4 md:bottom-6 left-0 right-0 flex items-center justify-center gap-3">

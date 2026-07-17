@@ -1,8 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { Property } from '../types/property';
 import { useComparison } from '../contexts/ComparisonContext';
-import { getImgproxyUrl } from '../lib/imgproxy';
 
 interface PropertyCardProps {
   property: Property;
@@ -13,15 +12,9 @@ export function PropertyCard({ property, showCompare = true }: PropertyCardProps
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [imgLoaded, setImgLoaded] = useState(false);
-  const [signedUrl, setSignedUrl] = useState('');
   const { toggleProperty, isSelected } = useComparison();
 
   const selected = isSelected(property.id);
-
-  useEffect(() => {
-    getImgproxyUrl(property.imageUrl, { width: 600, height: 450, quality: 80, format: 'webp' })
-      .then(setSignedUrl);
-  }, [property.imageUrl]);
 
   const toggleShare = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -46,7 +39,7 @@ export function PropertyCard({ property, showCompare = true }: PropertyCardProps
           {!imgLoaded && (
             <div className="absolute inset-0 bg-[#f5f3f0] animate-pulse"></div>
           )}
-          <img src={signedUrl || property.imageUrl} alt={property.title} loading="lazy"
+          <img src={property.imageUrl} alt={property.title} loading="lazy"
             onLoad={() => setImgLoaded(true)}
             className={`w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-[800ms] ease-out ${imgLoaded ? 'opacity-100' : 'opacity-0'}`} />
           

@@ -1,6 +1,5 @@
 import express from 'express';
 import cors from 'cors';
-import crypto from 'crypto';
 import dotenv from 'dotenv';
 import { prisma } from './prisma';
 import { startErpSync } from './erp-sync';
@@ -17,33 +16,6 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 app.use(express.json());
-
-app.post('/api/imgproxy/sign', (req, res) => {
-  try {
-    const { imageUrl, width = 0, height = 0, quality = 80, format = 'webp', resizingType = 'fill' } = req.body;
-    if (!imageUrl) return res.status(400).json({ error: 'imageUrl é obrigatório.' });
-
-    const KEY = process.env.IMGPROXY_KEY;
-    const SALT = process.env.IMGPROXY_SALT;
-    const BASE_URL = process.env.IMGPROXY_URL;
-
-    if (!KEY || !SALT || !BASE_URL) {
-      return res.json({ url: imageUrl });
-    }
-
-    const encodedUrl = Buffer.from(imageUrl).toString('base64url');
-    const path = `/rs:${resizingType}:${width}:${height}:0/g:ce/q:${quality}/f:${format}/${encodedUrl}`;
-
-    const hmac = crypto.createHmac('sha256', Buffer.from(KEY, 'hex'));
-    hmac.update(Buffer.from(SALT, 'hex'));
-    hmac.update(path);
-    const signature = hmac.digest('base64url');
-
-    res.json({ url: `${BASE_URL.replace(/\/$/, '')}/${signature}${path}` });
-  } catch {
-    res.status(500).json({ error: 'Erro ao assinar imagem.' });
-  }
-});
 
 app.get('/properties', async (_req, res) => {
   try {
