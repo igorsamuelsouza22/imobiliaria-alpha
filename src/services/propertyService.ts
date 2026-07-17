@@ -11,10 +11,10 @@ function mapBackendProperty(backend: BackendProperty): Property {
   const city = parts.length > 2 ? parts[2] : String(backend.city || '');
   const location = [neighborhood, city].filter(Boolean).join(', ') || 'Localização não informada';
 
-  const typeMap: Record<string, string> = {
+  const typeMap: Record<string, Property['type']> = {
     house: 'Casa', HOUSE: 'Casa',
     apartment: 'Apartamento', APARTMENT: 'Apartamento',
-    commercial: 'Comercial', COMMERCIAL: 'Comercial',
+    commercial: 'Salão Comercial', COMMERCIAL: 'Salão Comercial',
     land: 'Terreno', LAND: 'Terreno',
     studio: 'Apartamento', STUDIO: 'Apartamento',
     farm: 'Casa', FARM: 'Casa',
@@ -29,7 +29,7 @@ function mapBackendProperty(backend: BackendProperty): Property {
     commercial: 'Comercial', COMMERCIAL: 'Comercial',
   };
 
-  const statusOperationMap: Record<string, string> = {
+  const statusOperationMap: Record<string, Property['operation']> = {
     active: 'Venda', inactive: 'Venda', sold: 'Venda',
     rented: 'Aluguel', reserved: 'Venda e Aluguel', draft: 'Venda',
   };
