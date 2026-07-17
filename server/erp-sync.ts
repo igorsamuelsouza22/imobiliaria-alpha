@@ -35,7 +35,7 @@ async function syncOnce(url: string) {
     }
 
     if (payload?.siteSettings) {
-      await upsertSiteSettings(payload.siteSettings as Record<string, unknown>);
+      await upsertSiteSettings(payload.siteSettings as Record<string, unknown>, payload.chatwoot as Record<string, unknown> | null);
     }
 
     // Reconciliation: anything not in this snapshot got unpublished/deleted
@@ -129,7 +129,7 @@ async function upsertProperty(data: Record<string, unknown>) {
   });
 }
 
-async function upsertSiteSettings(data: Record<string, unknown>) {
+async function upsertSiteSettings(data: Record<string, unknown>, chatwoot: Record<string, unknown> | null) {
   const fields = {
     phone: (data.phone as string) || null,
     whatsapp: (data.whatsapp as string) || null,
@@ -146,6 +146,7 @@ async function upsertSiteSettings(data: Record<string, unknown>) {
     linkedinUrl: (data.linkedinUrl as string) || null,
     businessHours: (data.businessHours as string) || null,
     tagline: (data.tagline as string) || null,
+    chatwootWebsiteToken: (chatwoot?.websiteToken as string) || null,
   };
   await prisma.siteSettings.upsert({
     where: { singleton: 1 },

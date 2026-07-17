@@ -61,5 +61,6 @@ model SiteSettings {
   linkedinUrl   String?
   businessHours String?
   tagline       String?
+  chatwootWebsiteToken String?
   updatedAt     DateTime @updatedAt
 }

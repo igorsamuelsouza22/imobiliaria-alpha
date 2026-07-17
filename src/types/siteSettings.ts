@@ -14,4 +14,5 @@ export interface SiteSettings {
   linkedinUrl: string | null;
   businessHours: string | null;
   tagline: string | null;
+  chatwootWebsiteToken: string | null;
 }

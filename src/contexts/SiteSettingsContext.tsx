@@ -20,6 +20,7 @@ const DEFAULT_SETTINGS: SiteSettings = {
   linkedinUrl: null,
   businessHours: 'Seg a Sex: 9h às 18h',
   tagline: null,
+  chatwootWebsiteToken: null,
 };
 
 const SiteSettingsContext = createContext<SiteSettings>(DEFAULT_SETTINGS);

@@ -3,6 +3,8 @@ import { Link, useParams } from 'react-router-dom';
 import { ScrollReveal } from '../components/ScrollReveal';
 import { getPropertyById } from '../services/propertyService';
 import type { Property } from '../types/property';
+import { useSiteSettings } from '../contexts/SiteSettingsContext';
+import { openChatwootWithUser } from '../lib/chatwootWidget';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -62,6 +64,40 @@ export function PropertyDetails() {
   const [activeGalleryImageIndex, setActiveGalleryImageIndex] = useState(0);
   const [selectedRoomCategory, setSelectedRoomCategory] = useState('Todos');
   const [showStickyHeader, setShowStickyHeader] = useState(false);
+
+  const siteSettings = useSiteSettings();
+  const [visitName, setVisitName] = useState('');
+  const [visitEmail, setVisitEmail] = useState('');
+  const [visitPhone, setVisitPhone] = useState('');
+  const [visitError, setVisitError] = useState<string | null>(null);
+  const [visitSubmitting, setVisitSubmitting] = useState(false);
+
+  async function handleScheduleVisit() {
+    if (!visitName.trim() || !visitEmail.trim() || !visitPhone.trim()) {
+      setVisitError('Preencha nome, e-mail e telefone para agendar.');
+      return;
+    }
+    if (!/^\S+@\S+\.\S+$/.test(visitEmail.trim())) {
+      setVisitError('Digite um e-mail válido.');
+      return;
+    }
+    const chatwootBaseUrl = import.meta.env.VITE_CHATWOOT_BASE_URL;
+    if (!siteSettings.chatwootWebsiteToken || !chatwootBaseUrl) {
+      setVisitError('Chat indisponível no momento. Tente novamente mais tarde.');
+      return;
+    }
+    setVisitError(null);
+    setVisitSubmitting(true);
+    try {
+      await openChatwootWithUser(siteSettings.chatwootWebsiteToken, chatwootBaseUrl, {
+        name: visitName.trim(),
+        email: visitEmail.trim(),
+        phone: visitPhone.trim(),
+      });
+    } finally {
+      setVisitSubmitting(false);
+    }
+  }
 
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
@@ -489,12 +525,16 @@ export function PropertyDetails() {
                   </div>
                 </div>
 
-                <form className="space-y-4">
-                  <input type="text" placeholder="Seu Nome" className="w-full px-4 py-3 rounded-lg bg-gray-50 border border-gray-200 focus:border-[#c0a062] focus:ring-1 focus:ring-[#c0a062] outline-none" />
-                  <input type="email" placeholder="Seu E-mail" className="w-full px-4 py-3 rounded-lg bg-gray-50 border border-gray-200 focus:border-[#c0a062] focus:ring-1 focus:ring-[#c0a062] outline-none" />
-                  <input type="tel" placeholder="Seu Telefone" className="w-full px-4 py-3 rounded-lg bg-gray-50 border border-gray-200 focus:border-[#c0a062] focus:ring-1 focus:ring-[#c0a062] outline-none" />
-                  <button type="button" className="w-full bg-[#1a1a1a] text-white font-bold py-3 rounded-lg hover:bg-[#c0a062] transition-colors">
-                    Agendar Visita
+                <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); handleScheduleVisit(); }}>
+                  <input type="text" placeholder="Seu Nome" value={visitName} onChange={(e) => setVisitName(e.target.value)}
+                    className="w-full px-4 py-3 rounded-lg bg-gray-50 border border-gray-200 focus:border-[#c0a062] focus:ring-1 focus:ring-[#c0a062] outline-none" />
+                  <input type="email" placeholder="Seu E-mail" value={visitEmail} onChange={(e) => setVisitEmail(e.target.value)}
+                    className="w-full px-4 py-3 rounded-lg bg-gray-50 border border-gray-200 focus:border-[#c0a062] focus:ring-1 focus:ring-[#c0a062] outline-none" />
+                  <input type="tel" placeholder="Seu Telefone" value={visitPhone} onChange={(e) => setVisitPhone(e.target.value)}
+                    className="w-full px-4 py-3 rounded-lg bg-gray-50 border border-gray-200 focus:border-[#c0a062] focus:ring-1 focus:ring-[#c0a062] outline-none" />
+                  {visitError && <p className="text-red-500 text-xs">{visitError}</p>}
+                  <button type="submit" disabled={visitSubmitting} className="w-full bg-[#1a1a1a] text-white font-bold py-3 rounded-lg hover:bg-[#c0a062] transition-colors disabled:opacity-60">
+                    {visitSubmitting ? 'Abrindo chat…' : 'Agendar Visita'}
                   </button>
                 </form>
             </div>
