@@ -90,58 +90,73 @@ export function PropertyDetails() {
     const holder: HTMLElement = holderEl;
     const iframe: HTMLIFrameElement = iframeEl;
 
-    iframe.style.width = '100%';
-    iframe.style.height = '100%';
-    iframe.style.border = '0';
-    iframe.style.visibility = 'visible';
+    iframe.style.setProperty('width', '100%', 'important');
+    iframe.style.setProperty('height', '100%', 'important');
+    iframe.style.setProperty('border', '0', 'important');
+    iframe.style.setProperty('visibility', 'visible', 'important');
 
     // Chatwoot's own stylesheet shapes #cw-widget-holder for its default
-    // floating corner bubble (its own box-shadow/margin/radius). Since we're
-    // stretching that same element over our card instead, override those
-    // here — inline styles win over its external stylesheet — so the
-    // visible edges match the card (rounded-xl, no floating shadow/margin)
-    // instead of looking like a bubble pasted on top of it.
-    holder.style.margin = '0';
-    holder.style.borderRadius = '0.75rem';
-    holder.style.overflow = 'hidden';
-    holder.style.boxShadow = 'none';
-    holder.style.border = '1px solid #e5e7eb';
-    holder.style.background = '#fff';
-
-    function syncPosition() {
+    // floating corner bubble (its own box-shadow/margin/radius/position),
+    // and re-asserts some of that itself when the widget expands (its own
+    // open animation runs after our first sync below, silently winning the
+    // fight and dragging the box back toward its default corner — that's
+    // why it kept rendering outside the card). setProperty(..., 'important')
+    // makes our inline declarations beat a plain external rule; the
+    // MutationObserver below catches the cases where Chatwoot's script
+    // still overwrites the inline style outright afterward and reapplies
+    // ours immediately instead of losing silently.
+    let applying = false;
+    function apply() {
       const rect = chatContainerRef.current?.getBoundingClientRect();
       if (!rect) return;
-      holder.style.position = 'fixed';
-      holder.style.inset = 'auto';
-      holder.style.top = `${rect.top}px`;
-      holder.style.left = `${rect.left}px`;
-      holder.style.width = `${rect.width}px`;
-      holder.style.height = `${rect.height}px`;
-      holder.style.zIndex = '30';
+      const top = `${Math.round(rect.top)}px`;
+      const left = `${Math.round(rect.left)}px`;
+      const width = `${Math.round(rect.width)}px`;
+      const height = `${Math.round(rect.height)}px`;
+      if (
+        holder.style.position === 'fixed' && holder.style.top === top && holder.style.left === left &&
+        holder.style.width === width && holder.style.height === height
+      ) {
+        return; // already correct — avoid re-triggering the observer forever
+      }
+      applying = true;
+      holder.style.setProperty('position', 'fixed', 'important');
+      holder.style.setProperty('inset', 'auto', 'important');
+      holder.style.setProperty('top', top, 'important');
+      holder.style.setProperty('left', left, 'important');
+      holder.style.setProperty('right', 'auto', 'important');
+      holder.style.setProperty('bottom', 'auto', 'important');
+      holder.style.setProperty('width', width, 'important');
+      holder.style.setProperty('height', height, 'important');
+      holder.style.setProperty('max-width', 'none', 'important');
+      holder.style.setProperty('max-height', 'none', 'important');
+      holder.style.setProperty('z-index', '30', 'important');
+      holder.style.setProperty('margin', '0', 'important');
+      holder.style.setProperty('border-radius', '0.75rem', 'important');
+      holder.style.setProperty('overflow', 'hidden', 'important');
+      holder.style.setProperty('box-shadow', 'none', 'important');
+      holder.style.setProperty('border', '1px solid #e5e7eb', 'important');
+      holder.style.setProperty('background', '#fff', 'important');
+      applying = false;
     }
 
-    syncPosition();
-    window.addEventListener('scroll', syncPosition);
-    window.addEventListener('resize', syncPosition);
+    apply();
+    window.addEventListener('scroll', apply);
+    window.addEventListener('resize', apply);
+
+    const observer = new MutationObserver(() => {
+      if (!applying) apply();
+    });
+    observer.observe(holder, { attributes: true, attributeFilter: ['style'] });
 
     return () => {
-      window.removeEventListener('scroll', syncPosition);
-      window.removeEventListener('resize', syncPosition);
+      window.removeEventListener('scroll', apply);
+      window.removeEventListener('resize', apply);
+      observer.disconnect();
       // Restore Chatwoot's own default floating position instead of
       // leaving it pinned to coordinates that no longer mean anything.
-      holder.style.position = '';
-      holder.style.inset = '';
-      holder.style.top = '';
-      holder.style.left = '';
-      holder.style.width = '';
-      holder.style.height = '';
-      holder.style.zIndex = '';
-      holder.style.margin = '';
-      holder.style.borderRadius = '';
-      holder.style.overflow = '';
-      holder.style.boxShadow = '';
-      holder.style.border = '';
-      holder.style.background = '';
+      holder.style.cssText = '';
+      iframe.style.cssText = '';
     };
   }, [chatOpen]);
 
@@ -604,7 +619,7 @@ export function PropertyDetails() {
                 )}
 
                 {chatOpen ? (
-                  <div ref={chatContainerRef} className="w-full rounded-xl overflow-hidden border border-gray-200" style={{ height: 580 }} />
+                  <div ref={chatContainerRef} className="w-full rounded-xl overflow-hidden border border-gray-200" style={{ height: 640 }} />
                 ) : (
                   <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); handleScheduleVisit(); }}>
                     <input type="text" placeholder="Seu Nome" value={visitName} onChange={(e) => setVisitName(e.target.value)}
