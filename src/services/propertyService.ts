@@ -68,6 +68,8 @@ function mapBackendProperty(backend: BackendProperty): Property {
     area: Number(backend.area) || 0,
     garage: Number(backend.parkingSpaces) || 0,
     imageUrl,
+    latitude: typeof backend.latitude === 'number' ? backend.latitude : undefined,
+    longitude: typeof backend.longitude === 'number' ? backend.longitude : undefined,
     category: categoryMap[String(backend.type)] || 'Residencial',
     type: typeMap[String(backend.type)] || 'Casa',
     operation: statusOperationMap[String(backend.status)] || 'Venda',

@@ -33,6 +33,8 @@ export interface Property {
   bathrooms: number;
   area: number;
   imageUrl: string;
+  latitude?: number;
+  longitude?: number;
   category: 'Residencial' | 'Comercial';
   type: 'Casa' | 'Apartamento' | 'Terreno' | 'Cobertura' | 'Salão Comercial' | 'Galpão' | 'Escritório';
   operation: 'Venda' | 'Aluguel' | 'Venda e Aluguel';
