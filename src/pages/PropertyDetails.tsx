@@ -95,6 +95,19 @@ export function PropertyDetails() {
     iframe.style.border = '0';
     iframe.style.visibility = 'visible';
 
+    // Chatwoot's own stylesheet shapes #cw-widget-holder for its default
+    // floating corner bubble (its own box-shadow/margin/radius). Since we're
+    // stretching that same element over our card instead, override those
+    // here — inline styles win over its external stylesheet — so the
+    // visible edges match the card (rounded-xl, no floating shadow/margin)
+    // instead of looking like a bubble pasted on top of it.
+    holder.style.margin = '0';
+    holder.style.borderRadius = '0.75rem';
+    holder.style.overflow = 'hidden';
+    holder.style.boxShadow = 'none';
+    holder.style.border = '1px solid #e5e7eb';
+    holder.style.background = '#fff';
+
     function syncPosition() {
       const rect = chatContainerRef.current?.getBoundingClientRect();
       if (!rect) return;
@@ -123,6 +136,12 @@ export function PropertyDetails() {
       holder.style.width = '';
       holder.style.height = '';
       holder.style.zIndex = '';
+      holder.style.margin = '';
+      holder.style.borderRadius = '';
+      holder.style.overflow = '';
+      holder.style.boxShadow = '';
+      holder.style.border = '';
+      holder.style.background = '';
     };
   }, [chatOpen]);
 
@@ -574,16 +593,18 @@ export function PropertyDetails() {
 
           <ScrollReveal direction="right" duration={1000} delay={400} className="lg:w-1/3">
             <div className={`bg-white rounded-2xl shadow-xl p-6 border border-gray-100 transition-all duration-300 ${showStickyHeader ? 'sticky top-[160px]' : 'sticky top-24'}`}>
-                <div className="flex items-center gap-4 mb-6">
-                  <img src="https://picsum.photos/seed/agent/100/100" alt="Agent" className="w-16 h-16 rounded-full object-cover border-2 border-[#c0a062]" />
-                  <div>
-                    <p className="text-sm text-gray-500">Consultor Responsável</p>
-                    <h3 className="font-bold text-gray-900 text-lg">Ricardo Silva</h3>
+                {!chatOpen && (
+                  <div className="flex items-center gap-4 mb-6">
+                    <img src="https://picsum.photos/seed/agent/100/100" alt="Agent" className="w-16 h-16 rounded-full object-cover border-2 border-[#c0a062]" />
+                    <div>
+                      <p className="text-sm text-gray-500">Consultor Responsável</p>
+                      <h3 className="font-bold text-gray-900 text-lg">Ricardo Silva</h3>
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {chatOpen ? (
-                  <div ref={chatContainerRef} className="w-full rounded-lg overflow-hidden border border-gray-200" style={{ height: 520 }} />
+                  <div ref={chatContainerRef} className="w-full rounded-xl overflow-hidden border border-gray-200" style={{ height: 580 }} />
                 ) : (
                   <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); handleScheduleVisit(); }}>
                     <input type="text" placeholder="Seu Nome" value={visitName} onChange={(e) => setVisitName(e.target.value)}
