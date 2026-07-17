@@ -10,11 +10,20 @@ let loadPromise: Promise<void> | null = null;
 // Chatwoot version/setup (confirmed against the real self-hosted instance:
 // the widget loaded and `$chatwoot` became available, but the event never
 // fired, leaving the caller awaiting forever).
+//
+// `window.$chatwoot` itself becomes truthy as soon as the SDK script runs,
+// which is BEFORE its widget iframe finishes booting and attaches the
+// postMessage listener that `setUser`/`toggle` actually talk to over —
+// confirmed by real testing: openChatwootWithUser() ran and the widget
+// opened, but the agent never saw the name/email/phone, because setUser()
+// fired into an iframe that wasn't listening yet. Also wait for that iframe
+// to exist in the DOM as a (imperfect, but much better than nothing) proxy
+// for "actually ready to receive commands".
 function waitForChatwoot(timeoutMs = 8000): Promise<void> {
   return new Promise((resolve, reject) => {
     const start = Date.now();
     const check = () => {
-      if (window.$chatwoot) {
+      if (window.$chatwoot && document.querySelector('#cw-widget-holder iframe')) {
         resolve();
         return;
       }
@@ -60,6 +69,15 @@ export async function openChatwootWithUser(
 ): Promise<void> {
   await loadChatwootWidget(websiteToken, baseUrl);
   const identifier = user.email || user.phone || user.name;
-  window.$chatwoot?.setUser(identifier, { name: user.name, email: user.email, phone_number: user.phone });
+  const identify = () =>
+    window.$chatwoot?.setUser(identifier, { name: user.name, email: user.email, phone_number: user.phone });
+
+  identify();
   window.$chatwoot?.toggle('open');
+  // Belt-and-suspenders: the iframe existing (see waitForChatwoot) doesn't
+  // guarantee its internal app has finished booting and is listening yet,
+  // so the very first setUser() can still land too early and get silently
+  // dropped. Re-send once the dust has settled — setUser is idempotent, so
+  // resending is harmless.
+  setTimeout(identify, 1500);
 }
