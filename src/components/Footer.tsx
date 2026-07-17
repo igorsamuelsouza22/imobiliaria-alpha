@@ -1,6 +1,11 @@
 import { ScrollReveal } from './ScrollReveal';
+import { useSiteSettings } from '../contexts/SiteSettingsContext';
 
 export function Footer() {
+  const settings = useSiteSettings();
+  const addressLine1 = [settings.street, settings.number].filter(Boolean).join(', ');
+  const addressLine2 = [settings.city, settings.state].filter(Boolean).join(', ');
+
   return (
     <footer className="bg-[#1a1a1a] text-white pt-16 pb-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -14,9 +19,9 @@ export function Footer() {
                 Especialistas em imóveis de alto padrão. Conectamos pessoas extraordinárias a lugares extraordinários.
               </p>
               <div className="flex space-x-4">
-                <a href="#" className="text-gray-400 hover:text-[#c0a062] transition-colors"><span className="sr-only">Instagram</span><span className="material-icons">photo_camera</span></a>
-                <a href="#" className="text-gray-400 hover:text-[#c0a062] transition-colors"><span className="sr-only">Facebook</span><span className="material-icons">facebook</span></a>
-                <a href="#" className="text-gray-400 hover:text-[#c0a062] transition-colors"><span className="sr-only">LinkedIn</span><span className="material-icons">work</span></a>
+                <a href={settings.instagramUrl || '#'} className="text-gray-400 hover:text-[#c0a062] transition-colors"><span className="sr-only">Instagram</span><span className="material-icons">photo_camera</span></a>
+                <a href={settings.facebookUrl || '#'} className="text-gray-400 hover:text-[#c0a062] transition-colors"><span className="sr-only">Facebook</span><span className="material-icons">facebook</span></a>
+                <a href={settings.linkedinUrl || '#'} className="text-gray-400 hover:text-[#c0a062] transition-colors"><span className="sr-only">LinkedIn</span><span className="material-icons">work</span></a>
               </div>
             </ScrollReveal>
           </div>
@@ -37,15 +42,15 @@ export function Footer() {
             <ul className="space-y-4 text-gray-400 text-sm">
               <li className="flex items-start gap-3">
                 <span className="material-icons text-[#c0a062]">location_on</span>
-                <span>Av. Paulista, 1000<br />São Paulo, SP</span>
+                <span>{addressLine1}{addressLine1 && addressLine2 && <br />}{addressLine2}</span>
               </li>
               <li className="flex items-center gap-3">
                 <span className="material-icons text-[#c0a062]">phone</span>
-                <span>(11) 99999-9999</span>
+                <span>{settings.phone}</span>
               </li>
               <li className="flex items-center gap-3">
                 <span className="material-icons text-[#c0a062]">email</span>
-                <span>contato@alpha.com.br</span>
+                <span>{settings.email}</span>
               </li>
             </ul>
           </ScrollReveal>

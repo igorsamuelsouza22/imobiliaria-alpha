@@ -74,7 +74,7 @@ function mapBackendProperty(backend: BackendProperty): Property {
     type: typeMap[String(backend.type)] || 'Casa',
     operation: statusOperationMap[String(backend.status)] || 'Venda',
     description: String(backend.description || ''),
-    featured: backend.status === 'active',
+    featured: Boolean(backend.featured),
     images: images.map((url) => ({ url, room: '' })),
     roomImages,
     features,

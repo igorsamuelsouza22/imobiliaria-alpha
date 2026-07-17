@@ -1,6 +1,13 @@
 import { ScrollReveal } from '../components/ScrollReveal';
+import { useSiteSettings } from '../contexts/SiteSettingsContext';
 
 export function Contact() {
+  const settings = useSiteSettings();
+  const addressLine1 = [settings.street, settings.number].filter(Boolean).join(', ');
+  const addressLine2 = [settings.city, settings.state && `${settings.state}${settings.zip ? ` - ${settings.zip}` : ''}`].filter(Boolean).join(', ');
+  const waDigits = (settings.whatsapp || '').replace(/\D/g, '');
+  const waLink = waDigits ? `https://wa.me/55${waDigits}` : 'https://wa.me/5511999999999';
+
   return (
     <>
       <section className="relative h-[50vh] flex items-center justify-center overflow-hidden">
@@ -33,8 +40,8 @@ export function Contact() {
                   <span className="material-icons text-gray-500 group-hover:text-[#c0a062] transition-colors" style={{ fontSize: 24, width: 24, height: 24 }}>location_on</span>
                 </div>
                 <h3 className="text-sm font-semibold uppercase tracking-[0.15em] text-gray-400 mb-3">Endereço</h3>
-                <p className="text-gray-900 font-medium">Av. Paulista, 1000</p>
-                <p className="text-gray-500 text-sm mt-1">São Paulo, SP - 01310-100</p>
+                <p className="text-gray-900 font-medium">{addressLine1}</p>
+                <p className="text-gray-500 text-sm mt-1">{addressLine2}</p>
               </div>
             </ScrollReveal>
 
@@ -44,8 +51,8 @@ export function Contact() {
                   <span className="material-icons text-gray-500 group-hover:text-[#c0a062] transition-colors" style={{ fontSize: 24, width: 24, height: 24 }}>phone</span>
                 </div>
                 <h3 className="text-sm font-semibold uppercase tracking-[0.15em] text-gray-400 mb-3">Telefone</h3>
-                <p className="text-gray-900 font-medium">(11) 99999-9999</p>
-                <p className="text-gray-500 text-sm mt-1">Seg a Sex: 9h às 18h</p>
+                <p className="text-gray-900 font-medium">{settings.phone}</p>
+                <p className="text-gray-500 text-sm mt-1">{settings.businessHours}</p>
               </div>
             </ScrollReveal>
 
@@ -55,7 +62,7 @@ export function Contact() {
                   <span className="material-icons text-gray-500 group-hover:text-[#c0a062] transition-colors" style={{ fontSize: 24, width: 24, height: 24 }}>email</span>
                 </div>
                 <h3 className="text-sm font-semibold uppercase tracking-[0.15em] text-gray-400 mb-3">E-mail</h3>
-                <p className="text-gray-900 font-medium">contato@alpha.com.br</p>
+                <p className="text-gray-900 font-medium">{settings.email}</p>
                 <p className="text-gray-500 text-sm mt-1">Respondemos em até 24h</p>
               </div>
             </ScrollReveal>
@@ -74,7 +81,7 @@ export function Contact() {
                 </p>
 
                 <div className="space-y-4">
-                  <a href="https://www.instagram.com/" target="_blank" rel="noopener noreferrer"
+                  <a href={settings.instagramUrl || 'https://www.instagram.com/'} target="_blank" rel="noopener noreferrer"
                     className="flex items-center gap-4 p-4 rounded-xl bg-white border border-gray-100 hover:border-[#c0a062]/30 hover:shadow-md transition-all group">
                     <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center group-hover:bg-[#c0a062]/10 transition-colors">
                       <svg className="w-5 h-5 text-gray-500 group-hover:text-[#c0a062] transition-colors" fill="currentColor" viewBox="0 0 24 24">
@@ -87,7 +94,7 @@ export function Contact() {
                     </div>
                   </a>
 
-                  <a href="https://www.youtube.com/" target="_blank" rel="noopener noreferrer"
+                  <a href={settings.youtubeUrl || 'https://www.youtube.com/'} target="_blank" rel="noopener noreferrer"
                     className="flex items-center gap-4 p-4 rounded-xl bg-white border border-gray-100 hover:border-[#c0a062]/30 hover:shadow-md transition-all group">
                     <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center group-hover:bg-[#c0a062]/10 transition-colors">
                       <svg className="w-5 h-5 text-gray-500 group-hover:text-[#c0a062] transition-colors" fill="currentColor" viewBox="0 0 24 24">
@@ -100,14 +107,14 @@ export function Contact() {
                     </div>
                   </a>
 
-                  <a href="https://wa.me/5511999999999" target="_blank" rel="noopener noreferrer"
+                  <a href={waLink} target="_blank" rel="noopener noreferrer"
                     className="flex items-center gap-4 p-4 rounded-xl bg-white border border-gray-100 hover:border-[#c0a062]/30 hover:shadow-md transition-all group">
                     <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center group-hover:bg-[#c0a062]/10 transition-colors">
                       <span className="material-icons text-gray-500 group-hover:text-[#c0a062] transition-colors" style={{ fontSize: 20, width: 20, height: 20 }}>chat</span>
                     </div>
                     <div>
                       <p className="text-gray-900 font-medium text-sm">WhatsApp</p>
-                      <p className="text-gray-400 text-xs">(11) 99999-9999</p>
+                      <p className="text-gray-400 text-xs">{settings.whatsapp}</p>
                     </div>
                   </a>
                 </div>

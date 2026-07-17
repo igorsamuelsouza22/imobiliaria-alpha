@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-route
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { ComparisonProvider } from './contexts/ComparisonContext';
+import { SiteSettingsProvider } from './contexts/SiteSettingsContext';
 import { Home } from './pages/Home';
 import { Listings } from './pages/Listings';
 import { PropertyDetails } from './pages/PropertyDetails';
@@ -38,16 +39,18 @@ function AnimatedRoutes() {
 function App() {
   return (
     <Router>
-      <ComparisonProvider>
-        <div className="flex flex-col min-h-screen">
-          <Navbar />
-          <ScrollToTop />
-          <main className="flex-grow">
-            <AnimatedRoutes />
-          </main>
-          <Footer />
-        </div>
-      </ComparisonProvider>
+      <SiteSettingsProvider>
+        <ComparisonProvider>
+          <div className="flex flex-col min-h-screen">
+            <Navbar />
+            <ScrollToTop />
+            <main className="flex-grow">
+              <AnimatedRoutes />
+            </main>
+            <Footer />
+          </div>
+        </ComparisonProvider>
+      </SiteSettingsProvider>
     </Router>
   );
 }

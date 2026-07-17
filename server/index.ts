@@ -57,6 +57,16 @@ app.delete('/properties/:id', async (req, res) => {
   }
 });
 
+app.get('/site-settings', async (_req, res) => {
+  try {
+    const settings = await prisma.siteSettings.findUnique({ where: { singleton: 1 } });
+    res.json(settings ?? null);
+  } catch (err) {
+    console.error('Erro ao buscar configurações do site:', err);
+    res.status(500).json({ error: 'Erro ao buscar configurações do site.' });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`🚀 Backend rodando na porta ${PORT}`);
   startErpSync();

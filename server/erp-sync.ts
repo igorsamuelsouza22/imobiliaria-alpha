@@ -34,6 +34,10 @@ async function syncOnce(url: string) {
       await upsertProperty(item);
     }
 
+    if (payload?.siteSettings) {
+      await upsertSiteSettings(payload.siteSettings as Record<string, unknown>);
+    }
+
     // Reconciliation: anything not in this snapshot got unpublished/deleted
     // on the ERP side since the last poll — remove it here too. This is what
     // makes polling self-correcting without needing an explicit "deleted"
@@ -78,6 +82,7 @@ async function upsertProperty(data: Record<string, unknown>) {
     description: data.description as string | null,
     type: (data.propertyType as string) || (data.type as string) || 'house',
     status,
+    featured: Boolean(data.featured),
     price: data.salePrice ? Number(data.salePrice) : (data.rentPrice ? Number(data.rentPrice) : null),
     area: data.area ? Number(data.area) : null,
     bedrooms: data.beds ? Number(data.beds) : null,
@@ -104,6 +109,7 @@ async function upsertProperty(data: Record<string, unknown>) {
       description: commonData.description || '',
       type: commonData.type,
       status: commonData.status,
+      featured: commonData.featured,
       price: commonData.price,
       area: commonData.area,
       bedrooms: commonData.bedrooms,
@@ -120,5 +126,30 @@ async function upsertProperty(data: Record<string, unknown>) {
       roomImages: commonData.roomImages,
       features: commonData.features,
     },
+  });
+}
+
+async function upsertSiteSettings(data: Record<string, unknown>) {
+  const fields = {
+    phone: (data.phone as string) || null,
+    whatsapp: (data.whatsapp as string) || null,
+    email: (data.email as string) || null,
+    zip: (data.zip as string) || null,
+    street: (data.street as string) || null,
+    number: (data.number as string) || null,
+    district: (data.district as string) || null,
+    city: (data.city as string) || null,
+    state: (data.state as string) || null,
+    instagramUrl: (data.instagramUrl as string) || null,
+    facebookUrl: (data.facebookUrl as string) || null,
+    youtubeUrl: (data.youtubeUrl as string) || null,
+    linkedinUrl: (data.linkedinUrl as string) || null,
+    businessHours: (data.businessHours as string) || null,
+    tagline: (data.tagline as string) || null,
+  };
+  await prisma.siteSettings.upsert({
+    where: { singleton: 1 },
+    update: fields,
+    create: { singleton: 1, ...fields },
   });
 }

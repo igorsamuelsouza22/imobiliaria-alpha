@@ -14,6 +14,7 @@ model Property {
   description   String?
   type          String
   status        String   @default("active")
+  featured      Boolean  @default(false)
   price         Float?
   area          Float?
   bedrooms      Int?
@@ -36,4 +37,29 @@ model Property {
   @@index([status])
   @@index([type])
   @@index([crmId])
+}
+
+// Enforced-singleton: always upsert({ where: { singleton: 1 }, ... }) — the
+// unique constraint on `singleton` guarantees a second row can never exist.
+// Public-site contact/social/hours settings, fed by the ERP's site-sync
+// feed (`siteSettings` sibling key next to `properties`).
+model SiteSettings {
+  id            String   @id @default(uuid())
+  singleton     Int      @unique @default(1)
+  phone         String?
+  whatsapp      String?
+  email         String?
+  zip           String?
+  street        String?
+  number        String?
+  district      String?
+  city          String?
+  state         String?
+  instagramUrl  String?
+  facebookUrl   String?
+  youtubeUrl    String?
+  linkedinUrl   String?
+  businessHours String?
+  tagline       String?
+  updatedAt     DateTime @updatedAt
 }
