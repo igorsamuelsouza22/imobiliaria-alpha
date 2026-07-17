@@ -71,6 +71,32 @@ export function PropertyDetails() {
   const [visitPhone, setVisitPhone] = useState('');
   const [visitError, setVisitError] = useState<string | null>(null);
   const [visitSubmitting, setVisitSubmitting] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+
+  // Once the widget is loaded/identified (see handleScheduleVisit), relocate
+  // its DOM node from Chatwoot's own floating/fixed-position holder into our
+  // card — same live iframe/session, just rendered inline instead of as a
+  // corner popup, per how the "Consultor Responsável" card is meant to work.
+  useEffect(() => {
+    if (!chatOpen || !chatContainerRef.current) return;
+    const holder = document.getElementById('cw-widget-holder');
+    if (!holder) return;
+    holder.style.position = 'static';
+    holder.style.inset = 'auto';
+    holder.style.width = '100%';
+    holder.style.height = '100%';
+    holder.style.zIndex = 'auto';
+    const iframe = holder.querySelector('iframe') as HTMLIFrameElement | null;
+    if (iframe) {
+      iframe.style.width = '100%';
+      iframe.style.height = '100%';
+      iframe.style.position = 'static';
+      iframe.style.border = '0';
+      iframe.style.visibility = 'visible';
+    }
+    chatContainerRef.current.appendChild(holder);
+  }, [chatOpen]);
 
   async function handleScheduleVisit() {
     if (!visitName.trim() || !visitEmail.trim() || !visitPhone.trim()) {
@@ -94,6 +120,7 @@ export function PropertyDetails() {
         email: visitEmail.trim(),
         phone: visitPhone.trim(),
       });
+      setChatOpen(true);
     } catch {
       setVisitError('Não foi possível abrir o chat agora. Tente novamente em instantes.');
     } finally {
@@ -527,18 +554,22 @@ export function PropertyDetails() {
                   </div>
                 </div>
 
-                <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); handleScheduleVisit(); }}>
-                  <input type="text" placeholder="Seu Nome" value={visitName} onChange={(e) => setVisitName(e.target.value)}
-                    className="w-full px-4 py-3 rounded-lg bg-gray-50 border border-gray-200 focus:border-[#c0a062] focus:ring-1 focus:ring-[#c0a062] outline-none" />
-                  <input type="email" placeholder="Seu E-mail" value={visitEmail} onChange={(e) => setVisitEmail(e.target.value)}
-                    className="w-full px-4 py-3 rounded-lg bg-gray-50 border border-gray-200 focus:border-[#c0a062] focus:ring-1 focus:ring-[#c0a062] outline-none" />
-                  <input type="tel" placeholder="Seu Telefone" value={visitPhone} onChange={(e) => setVisitPhone(e.target.value)}
-                    className="w-full px-4 py-3 rounded-lg bg-gray-50 border border-gray-200 focus:border-[#c0a062] focus:ring-1 focus:ring-[#c0a062] outline-none" />
-                  {visitError && <p className="text-red-500 text-xs">{visitError}</p>}
-                  <button type="submit" disabled={visitSubmitting} className="w-full bg-[#1a1a1a] text-white font-bold py-3 rounded-lg hover:bg-[#c0a062] transition-colors disabled:opacity-60">
-                    {visitSubmitting ? 'Abrindo chat…' : 'Agendar Visita'}
-                  </button>
-                </form>
+                {chatOpen ? (
+                  <div ref={chatContainerRef} className="w-full rounded-lg overflow-hidden border border-gray-200" style={{ height: 520 }} />
+                ) : (
+                  <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); handleScheduleVisit(); }}>
+                    <input type="text" placeholder="Seu Nome" value={visitName} onChange={(e) => setVisitName(e.target.value)}
+                      className="w-full px-4 py-3 rounded-lg bg-gray-50 border border-gray-200 focus:border-[#c0a062] focus:ring-1 focus:ring-[#c0a062] outline-none" />
+                    <input type="email" placeholder="Seu E-mail" value={visitEmail} onChange={(e) => setVisitEmail(e.target.value)}
+                      className="w-full px-4 py-3 rounded-lg bg-gray-50 border border-gray-200 focus:border-[#c0a062] focus:ring-1 focus:ring-[#c0a062] outline-none" />
+                    <input type="tel" placeholder="Seu Telefone" value={visitPhone} onChange={(e) => setVisitPhone(e.target.value)}
+                      className="w-full px-4 py-3 rounded-lg bg-gray-50 border border-gray-200 focus:border-[#c0a062] focus:ring-1 focus:ring-[#c0a062] outline-none" />
+                    {visitError && <p className="text-red-500 text-xs">{visitError}</p>}
+                    <button type="submit" disabled={visitSubmitting} className="w-full bg-[#1a1a1a] text-white font-bold py-3 rounded-lg hover:bg-[#c0a062] transition-colors disabled:opacity-60">
+                      {visitSubmitting ? 'Abrindo chat…' : 'Agendar Visita'}
+                    </button>
+                  </form>
+                )}
             </div>
           </ScrollReveal>
         </div>
