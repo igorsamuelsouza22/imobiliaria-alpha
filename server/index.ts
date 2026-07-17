@@ -3,7 +3,7 @@ import cors from 'cors';
 import crypto from 'crypto';
 import dotenv from 'dotenv';
 import { prisma } from './prisma';
-import { startRabbitMQConsumer } from './rabbitmq';
+import { startErpSync } from './erp-sync';
 
 dotenv.config({ path: 'server/.env' });
 
@@ -85,7 +85,7 @@ app.delete('/properties/:id', async (req, res) => {
   }
 });
 
-app.listen(PORT, async () => {
+app.listen(PORT, () => {
   console.log(`🚀 Backend rodando na porta ${PORT}`);
-  await startRabbitMQConsumer();
+  startErpSync();
 });
