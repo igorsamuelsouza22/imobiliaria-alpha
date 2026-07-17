@@ -94,6 +94,8 @@ export function PropertyDetails() {
         email: visitEmail.trim(),
         phone: visitPhone.trim(),
       });
+    } catch {
+      setVisitError('Não foi possível abrir o chat agora. Tente novamente em instantes.');
     } finally {
       setVisitSubmitting(false);
     }
