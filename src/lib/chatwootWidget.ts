@@ -2,6 +2,9 @@
 // keep a persistent chat bubble on every page, it only loads/opens the
 // widget when a visitor submits the "Agendar Visita" form (see
 // PropertyDetails.tsx), pre-filled with the name/email/phone they typed.
+// hideMessageBubble keeps Chatwoot's own floating launcher icon from ever
+// rendering — this site only ever opens the widget programmatically
+// (docked inside the property card), never as a corner bubble.
 
 let loadPromise: Promise<void> | null = null;
 
@@ -50,7 +53,7 @@ function loadChatwootWidget(websiteToken: string, baseUrl: string): Promise<void
     script.async = true;
     script.onerror = () => reject(new Error('Falha ao carregar o widget do Chatwoot.'));
     script.onload = () => {
-      window.chatwootSDK?.run({ websiteToken, baseUrl });
+      window.chatwootSDK?.run({ websiteToken, baseUrl, hideMessageBubble: true });
       waitForChatwoot().then(resolve, reject);
     };
     document.body.appendChild(script);
@@ -80,4 +83,13 @@ export async function openChatwootWithUser(
   // dropped. Re-send once the dust has settled — setUser is idempotent, so
   // resending is harmless.
   setTimeout(identify, 1500);
+}
+
+// Hides the widget window without destroying the conversation/contact —
+// Chatwoot keeps both server-side and via its own cookie, so a visitor
+// returning to the same property (see PropertyDetails.tsx's localStorage
+// restore) still lands back in the same thread. Used when leaving a
+// property page so the chat doesn't keep floating on other pages.
+export function closeChatwoot(): void {
+  window.$chatwoot?.toggle('close');
 }

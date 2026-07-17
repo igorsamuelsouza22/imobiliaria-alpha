@@ -4,7 +4,7 @@ import { ScrollReveal } from '../components/ScrollReveal';
 import { getPropertyById } from '../services/propertyService';
 import type { Property } from '../types/property';
 import { useSiteSettings } from '../contexts/SiteSettingsContext';
-import { openChatwootWithUser } from '../lib/chatwootWidget';
+import { openChatwootWithUser, closeChatwoot } from '../lib/chatwootWidget';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -157,8 +157,32 @@ export function PropertyDetails() {
       // leaving it pinned to coordinates that no longer mean anything.
       holder.style.cssText = '';
       iframe.style.cssText = '';
+      // This cleanup also runs on unmount (leaving the property page) — the
+      // widget's iframe lives outside React's tree (appended to
+      // document.body by the SDK) and survives route changes on its own,
+      // so without this it kept showing as an open chat window on every
+      // other page. Closing here doesn't lose the conversation: Chatwoot
+      // keeps it server-side (and via its own cookie) — see closeChatwoot.
+      closeChatwoot();
     };
   }, [chatOpen]);
+
+  // Remembers which property the visitor was chatting about, scoped per
+  // property id — so returning to THIS property later reopens the same
+  // conversation automatically, but it never bleeds into other properties
+  // or other pages (those just never match this key and stay closed).
+  const chatStorageKey = (propertyId: string) => `alpha-chat-visit-${propertyId}`;
+
+  const openChat = useCallback(async (name: string, email: string, phone: string) => {
+    const chatwootBaseUrl = import.meta.env.VITE_CHATWOOT_BASE_URL;
+    if (!siteSettings.chatwootWebsiteToken || !chatwootBaseUrl) {
+      setVisitError('Chat indisponível no momento. Tente novamente mais tarde.');
+      return;
+    }
+    await openChatwootWithUser(siteSettings.chatwootWebsiteToken, chatwootBaseUrl, { name, email, phone });
+    setChatOpen(true);
+    if (id) localStorage.setItem(chatStorageKey(id), JSON.stringify({ name, email, phone }));
+  }, [siteSettings.chatwootWebsiteToken, id]);
 
   async function handleScheduleVisit() {
     if (!visitName.trim() || !visitEmail.trim() || !visitPhone.trim()) {
@@ -169,26 +193,48 @@ export function PropertyDetails() {
       setVisitError('Digite um e-mail válido.');
       return;
     }
-    const chatwootBaseUrl = import.meta.env.VITE_CHATWOOT_BASE_URL;
-    if (!siteSettings.chatwootWebsiteToken || !chatwootBaseUrl) {
-      setVisitError('Chat indisponível no momento. Tente novamente mais tarde.');
-      return;
-    }
     setVisitError(null);
     setVisitSubmitting(true);
     try {
-      await openChatwootWithUser(siteSettings.chatwootWebsiteToken, chatwootBaseUrl, {
-        name: visitName.trim(),
-        email: visitEmail.trim(),
-        phone: visitPhone.trim(),
-      });
-      setChatOpen(true);
+      await openChat(visitName.trim(), visitEmail.trim(), visitPhone.trim());
     } catch {
       setVisitError('Não foi possível abrir o chat agora. Tente novamente em instantes.');
     } finally {
       setVisitSubmitting(false);
     }
   }
+
+  // Auto-restore: if this property's chat was already open on an earlier
+  // visit in this browser, skip the form and reopen it directly.
+  useEffect(() => {
+    if (!id || !siteSettings.chatwootWebsiteToken || chatOpen) return;
+    const raw = localStorage.getItem(chatStorageKey(id));
+    if (!raw) return;
+    try {
+      const saved = JSON.parse(raw) as { name: string; email: string; phone: string };
+      setVisitName(saved.name);
+      setVisitEmail(saved.email);
+      setVisitPhone(saved.phone);
+      openChat(saved.name, saved.email, saved.phone).catch(() => {});
+    } catch {
+      localStorage.removeItem(chatStorageKey(id));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, siteSettings.chatwootWebsiteToken]);
+
+  // React Router reuses this same component instance when navigating
+  // between two /imoveis/:id pages (no remount) — so the positioning
+  // effect's unmount cleanup alone doesn't fire when the visitor clicks
+  // from one property straight into another. Close explicitly whenever the
+  // id itself changes, so the chat never carries over onto a different
+  // property's page; the auto-restore effect above will reopen it if that
+  // new property has its own saved conversation.
+  useEffect(() => {
+    return () => {
+      closeChatwoot();
+      setChatOpen(false);
+    };
+  }, [id]);
 
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
