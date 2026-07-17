@@ -1,6 +1,5 @@
 import type { Property, Feature } from '../types/property';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+import { API_URL } from '../lib/apiUrl';
 
 type BackendProperty = Record<string, unknown>;
 
