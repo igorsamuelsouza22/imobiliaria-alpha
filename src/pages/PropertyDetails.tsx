@@ -399,7 +399,7 @@ export function PropertyDetails() {
                     <ScrollReveal delay={200}>
                       <div className="relative mb-4 group cursor-pointer overflow-hidden rounded-xl" onClick={() => openGallery(activeGalleryImageIndex)} tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && openGallery(activeGalleryImageIndex)}>
                         <div className="aspect-[16/10] bg-gray-100">
-                          <img src={displayFilteredImages[activeGalleryImageIndex]?.url || displayFilteredImages[0]?.url} alt={property.title} className="w-full h-full object-cover transition-transform duration-[800ms] ease-out group-hover:scale-105" />
+                          <img src={displayFilteredImages[activeGalleryImageIndex]?.url || displayFilteredImages[0]?.url} alt={property.title} className="w-full h-full object-contain transition-transform duration-[800ms] ease-out group-hover:scale-105" />
                         </div>
                         <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                         
