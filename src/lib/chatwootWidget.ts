@@ -65,6 +65,18 @@ function loadChatwootWidget(websiteToken: string, baseUrl: string): Promise<void
   return loadPromise;
 }
 
+// Chatwoot's contact API validates phone_number as E.164 (+<country><digits>,
+// digits only after the +) and silently drops it otherwise — the contact
+// just shows up as "Indisponível" in the dashboard, no error anywhere.
+// Our form's phone input has no mask (free text: "(11) 99999-8888", "11
+// 99999-8888", etc.), so it never matched that format. Assumes Brazil,
+// same as the rest of this site (no country selector anywhere).
+function toE164BR(rawPhone: string): string | undefined {
+  const digits = rawPhone.replace(/\D/g, '');
+  if (!digits) return undefined;
+  return `+${digits.startsWith('55') ? digits : `55${digits}`}`;
+}
+
 export async function openChatwootWithUser(
   websiteToken: string,
   baseUrl: string,
@@ -72,8 +84,9 @@ export async function openChatwootWithUser(
 ): Promise<void> {
   await loadChatwootWidget(websiteToken, baseUrl);
   const identifier = user.email || user.phone || user.name;
+  const phoneNumber = toE164BR(user.phone);
   const identify = () =>
-    window.$chatwoot?.setUser(identifier, { name: user.name, email: user.email, phone_number: user.phone });
+    window.$chatwoot?.setUser(identifier, { name: user.name, email: user.email, phone_number: phoneNumber });
 
   identify();
   window.$chatwoot?.toggle('open');
