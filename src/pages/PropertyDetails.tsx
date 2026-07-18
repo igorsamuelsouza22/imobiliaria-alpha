@@ -74,6 +74,20 @@ export function PropertyDetails() {
   const [chatOpen, setChatOpen] = useState(false);
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
+  // toggle('close') turned out to only minimize Chatwoot's panel back down
+  // to its own small launcher bubble, not actually hide it — confirmed by
+  // real testing: the bubble (and, once, the whole expanded panel) kept
+  // showing up on other pages after "closing". hideMessageBubble:true
+  // (see chatwootWidget.ts) doesn't reliably stop that either. Forcing the
+  // holder itself to display:none is the only thing that's guaranteed to
+  // actually make it disappear, regardless of whatever internal
+  // open/closed/bubble state Chatwoot thinks it's in.
+  function hideChatwootWidget() {
+    const holder = document.getElementById('cw-widget-holder');
+    if (holder) holder.style.setProperty('display', 'none', 'important');
+    closeChatwoot();
+  }
+
   // Once the widget is loaded/identified (see handleScheduleVisit), visually
   // pin it over our card instead of using Chatwoot's default floating
   // corner position. Deliberately does NOT move the iframe's DOM node
@@ -120,6 +134,7 @@ export function PropertyDetails() {
         return; // already correct — avoid re-triggering the observer forever
       }
       applying = true;
+      holder.style.setProperty('display', 'block', 'important');
       holder.style.setProperty('position', 'fixed', 'important');
       holder.style.setProperty('inset', 'auto', 'important');
       holder.style.setProperty('top', top, 'important');
@@ -153,17 +168,15 @@ export function PropertyDetails() {
       window.removeEventListener('scroll', apply);
       window.removeEventListener('resize', apply);
       observer.disconnect();
-      // Restore Chatwoot's own default floating position instead of
-      // leaving it pinned to coordinates that no longer mean anything.
-      holder.style.cssText = '';
-      iframe.style.cssText = '';
       // This cleanup also runs on unmount (leaving the property page) — the
       // widget's iframe lives outside React's tree (appended to
       // document.body by the SDK) and survives route changes on its own,
-      // so without this it kept showing as an open chat window on every
-      // other page. Closing here doesn't lose the conversation: Chatwoot
-      // keeps it server-side (and via its own cookie) — see closeChatwoot.
-      closeChatwoot();
+      // so without this it kept showing as an open chat window (or its
+      // launcher bubble) on every other page. Hiding it here doesn't lose
+      // the conversation: Chatwoot keeps it server-side (and via its own
+      // cookie) — see hideChatwootWidget.
+      iframe.style.cssText = '';
+      hideChatwootWidget();
     };
   }, [chatOpen]);
 
@@ -231,7 +244,7 @@ export function PropertyDetails() {
   // new property has its own saved conversation.
   useEffect(() => {
     return () => {
-      closeChatwoot();
+      hideChatwootWidget();
       setChatOpen(false);
     };
   }, [id]);
