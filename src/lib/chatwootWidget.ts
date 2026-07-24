@@ -91,9 +91,21 @@ export async function openChatwootWithUser(
   // Chatwoot contact automatically — with the contact already identified,
   // the widget never shows its own "informe seu e-mail" prompt, since the
   // visitor already typed all of that in the Agendar Visita form.
+  //
+  // Real-world catch: Chatwoot instances with "Enforce User Identity
+  // Validation" enabled silently DROP plain setUser calls (no HMAC hash =
+  // ignored), leaving the contact as a random "solitary-log-512" name. The
+  // custom attributes below are NOT subject to that enforcement, so they
+  // always reach the conversation payload — the ERP's webhook reads them
+  // and fixes the Chatwoot contact server-side with its agent token.
   const identify = () => {
     window.$chatwoot?.setLocale?.('pt_BR');
     window.$chatwoot?.setUser(identifier, { name: user.name, email: user.email, phone_number: phoneNumber });
+    window.$chatwoot?.setCustomAttributes?.({
+      visitante_nome: user.name,
+      visitante_email: user.email,
+      visitante_telefone: phoneNumber ?? user.phone,
+    });
   };
 
   identify();

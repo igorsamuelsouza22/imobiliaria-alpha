@@ -7,6 +7,7 @@ declare global {
     };
     $chatwoot?: {
       setUser: (identifier: string, user: { name?: string; email?: string; phone_number?: string; avatar_url?: string }) => void;
+      setCustomAttributes?: (attributes: Record<string, string>) => void;
       setLocale?: (locale: string) => void;
       toggle: (state?: 'open' | 'close') => void;
     };
