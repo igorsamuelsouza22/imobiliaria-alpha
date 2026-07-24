@@ -53,7 +53,9 @@ function loadChatwootWidget(websiteToken: string, baseUrl: string): Promise<void
     script.async = true;
     script.onerror = () => reject(new Error('Falha ao carregar o widget do Chatwoot.'));
     script.onload = () => {
-      window.chatwootSDK?.run({ websiteToken, baseUrl, hideMessageBubble: true });
+      // locale pt_BR: the widget defaults to English otherwise — every
+      // label ("Type your message", "We're away") must show in Portuguese.
+      window.chatwootSDK?.run({ websiteToken, baseUrl, hideMessageBubble: true, locale: 'pt_BR' });
       waitForChatwoot().then(resolve, reject);
     };
     document.body.appendChild(script);
@@ -85,8 +87,14 @@ export async function openChatwootWithUser(
   await loadChatwootWidget(websiteToken, baseUrl);
   const identifier = user.email || user.phone || user.name;
   const phoneNumber = toE164BR(user.phone);
-  const identify = () =>
+  // setUser BEFORE opening is what makes name/email/phone land on the
+  // Chatwoot contact automatically — with the contact already identified,
+  // the widget never shows its own "informe seu e-mail" prompt, since the
+  // visitor already typed all of that in the Agendar Visita form.
+  const identify = () => {
+    window.$chatwoot?.setLocale?.('pt_BR');
     window.$chatwoot?.setUser(identifier, { name: user.name, email: user.email, phone_number: phoneNumber });
+  };
 
   identify();
   window.$chatwoot?.toggle('open');
